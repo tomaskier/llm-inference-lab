@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Base model",
+  "type": "object",
+  "properties": {
+    "model_id": {
+      "type": "string",
+      "pattern": "^[\\w.-]+/[\\w.-]+$"
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    }
+  },
+  "required": ["model_id", "revision"],
+  "additionalProperties": false
+}
