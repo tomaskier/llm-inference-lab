@@ -1,2 +1,17 @@
+# Python
 /.venv
-/results
+__pycache__/
+*.pyc
+
+# Model weights (GBs, rebuilt with scripts/quantize.py or pulled from Kaggle)
+/models
+
+# Secrets (tunnel URL, API key)
+.env
+!.env.example
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Result archives downloaded from Kaggle (unzip into results/, which is tracked)
+*.zip
