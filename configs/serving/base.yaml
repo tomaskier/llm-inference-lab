@@ -1,0 +1,8 @@
+model: Qwen/Qwen2.5-1.5B-Instruct
+revision: 989aa7980e4cf806f80c7fef2b1adb7bc71aa306
+dtype: float16
+max_model_len: 8192
+gpu_memory_utilization: 0.85
+max_num_seqs: 64
+seed: 0
+enable_prefix_caching: false

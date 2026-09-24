@@ -15,3 +15,6 @@ __pycache__/
 
 # Result archives downloaded from Kaggle (unzip into results/, which is tracked)
 *.zip
+
+# Personal notes
+notas

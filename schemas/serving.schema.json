@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "vLLM serving config (one per variant)",
+  "type": "object",
+  "properties": {
+    "model": {
+      "description": "HF model id for base, local path for quantized variants",
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "dtype": {
+      "description": "T4 has no bf16 support",
+      "enum": ["float16", "auto"]
+    },
+    "max_model_len": {
+      "type": "integer",
+      "minimum": 512
+    },
+    "gpu_memory_utilization": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 0.95
+    },
+    "max_num_seqs": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "enable_prefix_caching": {
+      "description": "Always explicit (FR-2.3); serve.sh can override it per run",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "model",
+    "dtype",
+    "max_model_len",
+    "gpu_memory_utilization",
+    "max_num_seqs",
+    "seed",
+    "enable_prefix_caching"
+  ],
+  "additionalProperties": false
+}
