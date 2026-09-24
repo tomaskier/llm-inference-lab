@@ -60,7 +60,7 @@ Relevant roles: LLM/ML engineer, MLOps/platform engineer, inference/AI infrastru
 **T4 constraints that shape the design:**
 - No BF16 → `base` runs in **FP16**.
 - No FP8 tensor cores → `w8` uses **INT8 (W8A8)**.
-- The fastest 4-bit kernels in vLLM (Marlin/Machete) target newer GPUs → 4-bit support on sm75 must be **verified before building the variant** (FR-1.0).
+- 4-bit and INT8 kernel support on sm75 had to be **verified before building the variants** (FR-1.0). Both work; see §12.
 - No Docker inside Kaggle → vLLM runs as a plain process (`vllm serve`); the Docker Compose file is kept as a documented template for a GPU VM.
 
 ### 3.1 Architecture
@@ -120,7 +120,7 @@ Relevant roles: LLM/ML engineer, MLOps/platform engineer, inference/AI infrastru
 
 ### 4.2 Serving with vLLM
 
-- FR-2.1: Each variant has a vLLM config file `configs/serving/<variant>.yaml` (model path, `dtype`, `max-model-len`, `gpu-memory-utilization`, `max-num-seqs`, `seed`). `scripts/serve.sh <variant> [--prefix-cache on|off]` launches `vllm serve` from it.
+- FR-2.1: Each variant has a vLLM config file `configs/serving/<variant>.yaml` (model path, `dtype`, `max-model-len`, `gpu-memory-utilization`, `max-num-seqs`, `seed`). `scripts/serve.py start <variant> --prefix-cache on|off` launches `vllm serve` from it in the background.
 - FR-2.2: All settings not under test are **identical across variants**, in particular `gpu-memory-utilization` and `max-model-len`.
 - FR-2.3: **Prefix caching is always set explicitly** (`--enable-prefix-caching` or `--no-enable-prefix-caching`), never left to the version default.
 - FR-2.4: Serve through the OpenAI-compatible API. `scripts/smoke_test.py` sends one request, checks for a non-empty response, and exits non-zero otherwise.
@@ -144,7 +144,7 @@ Relevant roles: LLM/ML engineer, MLOps/platform engineer, inference/AI infrastru
 - FR-3.3: Run each configuration 3 times and report the median and spread (min–max or IQR).
 - FR-3.4: Warm up before measuring (e.g. 20 requests discarded after every server start) and document the procedure.
 - FR-3.5: Save raw output to `results/benchmarks/<variant>/<workload>[_cache-on|_cache-off]/run_<n>.json`.
-- FR-3.6: Pin the GuideLLM version and check its docs for current CLI flags. Verify that it can generate a **shared-prefix** synthetic dataset; if it can't, generate the RAG dataset with `scripts/make_rag_dataset.py` and a fixed seed.
+- FR-3.6: Pin the GuideLLM version and check its docs for current CLI flags. GuideLLM 0.7's synthetic data supports `prefix_tokens` / `prefix_count`, so the shared-prefix workload needs no custom dataset.
 - FR-3.7: The GuideLLM client runs in the same Kaggle session as the server (localhost), so tunnel latency never appears in benchmark numbers.
 
 ### 4.4 Quality Evaluation with lm-eval
@@ -178,8 +178,8 @@ Kaggle is free, so costs use a **reference cloud price** for the same hardware.
 
 ### 4.7 Running on Kaggle (session management)
 
-- FR-7.1: `notebooks/kaggle_runner.ipynb` is a thin wrapper that clones the repo, installs `requirements-gpu.txt`, and calls `make` targets. All logic lives in `scripts/`, never in the notebook.
-- FR-7.2: `scripts/run_matrix.sh` is **resumable**: it skips any cell whose `run_<n>.json` already exists, so a session that dies mid-matrix loses at most one run.
+- FR-7.1: `notebooks/kaggle_runner.ipynb` is a thin wrapper that clones the repo, runs `scripts/kaggle_setup.sh` (vLLM in the system Python; LLM Compressor, GuideLLM and lm-eval in separate venvs because their pins clash with vLLM's), and calls `make` targets. All logic lives in `scripts/`, never in the notebook.
+- FR-7.2: `scripts/run_matrix.py` is **resumable**: it skips any cell whose `run_<n>.json` already exists, so a session that dies mid-matrix loses at most one run.
 - FR-7.3: Results are written to `/kaggle/working/results/` and zipped at the end of every stage for download. Committing them to git is a manual step on the laptop.
 - FR-7.4: Keep a GPU-hour log in `docs/gpu-budget.md` (date, session, what ran, hours used).
 
@@ -191,8 +191,8 @@ Kaggle is free, so costs use a **reference cloud price** for the same hardware.
 
 **Setup**
 - Prometheus and Grafana run **on the laptop** via `observability/compose.yml`.
-- During an observability session, the Kaggle notebook exposes vLLM through a `cloudflared` quick tunnel. Prometheus scrapes `https://<tunnel>/metrics`; the tunnel URL is set in a local `.env` and never committed.
-- vLLM is started with `--api-key` whenever the tunnel is open. Close the tunnel when the session ends.
+- During an observability session, the Kaggle notebook exposes vLLM through a `cloudflared` quick tunnel. The tunnel points at `scripts/metrics_proxy.py`, which serves `/metrics` and nothing else, so the OpenAI API never leaves localhost. Prometheus reads the tunnel host from `observability/targets/vllm.json`, which is never committed.
+- Close the tunnel when the session ends.
 - Grafana is **provisioned as code** (datasource + dashboard JSON in `observability/grafana/`), so `docker compose up` gives a working dashboard with no manual clicks.
 - Observability runs are **separate** from the measured benchmark runs (FR-3.7), so scraping never affects the numbers.
 
@@ -248,7 +248,10 @@ llm-inference-lab/
 ├── SPEC.md                   # This file
 ├── REPORT.md                 # Generated decision report
 ├── Makefile                  # make quantize | serve | smoke | bench | eval | report | lint
-├── requirements-gpu.txt      # Kaggle: vllm, llmcompressor, guidellm, lm-eval (pinned)
+├── requirements-gpu.txt      # Kaggle system Python: vllm (pinned)
+├── requirements-quant.txt    # Kaggle venv: llmcompressor
+├── requirements-bench.txt    # Kaggle venv: guidellm
+├── requirements-eval.txt     # Kaggle venv: lm-eval
 ├── requirements-dev.txt      # Laptop/CI: pandas, matplotlib, ruff, mypy, jsonschema (pinned)
 ├── configs/
 │   ├── model.yaml            # base model id + pinned revision
@@ -260,11 +263,14 @@ llm-inference-lab/
 ├── workloads/                # GuideLLM workload definitions
 ├── scripts/
 │   ├── quantize.py
-│   ├── perplexity.py
-│   ├── serve.sh
+│   ├── serve.py              # start/stop vLLM from a serving config
+│   ├── measure_variant.py    # size, memory, KV cache, perplexity
+│   ├── run_eval.py
+│   ├── metrics_proxy.py
+│   ├── check_metrics.py
+│   ├── kaggle_setup.sh
 │   ├── smoke_test.py
-│   ├── run_matrix.sh         # variant × workload × repeats, resumable
-│   ├── make_rag_dataset.py   # only if GuideLLM can't do shared prefixes
+│   ├── run_matrix.py         # variant × workload × repeats, resumable
 │   └── check_regression.py
 ├── notebooks/
 │   └── kaggle_runner.ipynb   # thin wrapper, no logic
@@ -358,7 +364,7 @@ If the budget runs short, cut sweep points or `--limit` first, never the number 
 | Weekly GPU quota runs out | Budget table (§7), GPU-hour log, small model, reuse quantized checkpoints |
 | Shared/virtualized cloud GPU adds noise | Warmup, 3 runs, medians + spread, same session per variant where possible |
 | Metric names differ across vLLM versions | Pin the version; verify against `/metrics` before building dashboards |
-| Tunnel exposes the server publicly | `--api-key`, tunnel only during observability sessions, URL never committed |
+| Tunnel exposes the server publicly | Tunnel only a `/metrics` proxy, only during observability sessions; URL never committed |
 | Unfair comparisons | Same prompts, seeds, and server settings apart from the variable under test |
 | Scope creep | Ship milestones 0–7 first; extras are a second pass |
 
@@ -381,7 +387,23 @@ If the budget runs short, cut sweep points or `--limit` first, never the number 
 
 ## 12. Platform Decisions
 
-_To be written by the owner: which hardware was chosen and why, which T4 limitations affected the project, and what differs from a paid-GPU setup. Update this section after FR-1.0 with the actual kernel findings._
+**Hardware.** The project runs on a free Kaggle T4 because there is no budget for a paid GPU and my laptop has an Intel GPU, which vLLM and LLM Compressor don't support. The T4 is old (2018, Turing), so absolute numbers are modest. The comparison between variants is what matters.
+
+**What the T4 allows** (checked on 2026-09-24 with vLLM 0.30.0, FR-1.0):
+
+| Variant | Scheme | Kernel vLLM picked | Notes |
+|---|---|---|---|
+| `base` | FP16 | n/a | No BF16 on Turing |
+| `w8` | INT8 W8A8 | `CutlassInt8ScaledMMLinearKernel` | FP8 would need Ada or Hopper |
+| `w4` | W4A16 | `MarlinLinearKernel` | Works on the T4, which I didn't expect |
+
+**What changes compared with a paid GPU VM:**
+
+- No Docker on Kaggle. vLLM runs as a plain process started by `scripts/serve.py`. `docker/compose.yml` is the equivalent for a VM, validated in CI but not used.
+- Four Python environments instead of one. llmcompressor 0.14.0 and vllm 0.30.0 pin incompatible versions of the same dependency, so quantization, benchmarking and evaluation each have their own venv.
+- Prometheus and Grafana run on the laptop and reach Kaggle through a cloudflared tunnel that only exposes `/metrics`.
+- Sessions stop after 12 h or when idle, and there are about 30 GPU hours a week. Everything that runs on the GPU is resumable and saves results after each step.
+- Cost uses a reference cloud price for a T4 (`configs/cost.yaml`), since Kaggle itself is free.
 
 ---
 
