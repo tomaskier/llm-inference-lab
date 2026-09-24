@@ -1,0 +1,7 @@
+{
+  "variant": "w8",
+  "disk_gib": 1.73,
+  "weights_gib": 1.75,
+  "kv_cache_tokens": 350720,
+  "perplexity": 9.7
+}

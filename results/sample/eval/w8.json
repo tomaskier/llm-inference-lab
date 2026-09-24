@@ -1,0 +1,21 @@
+{
+  "variant": "w8",
+  "tasks": {
+    "mmlu": {
+      "value": 0.597,
+      "stderr": 0.014
+    },
+    "arc_challenge": {
+      "value": 0.468,
+      "stderr": 0.022
+    },
+    "hellaswag": {
+      "value": 0.657,
+      "stderr": 0.021
+    },
+    "gsm8k": {
+      "value": 0.608,
+      "stderr": 0.031
+    }
+  }
+}

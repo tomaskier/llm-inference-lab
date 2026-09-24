@@ -1,0 +1,99 @@
+{
+  "source": "results/sample",
+  "tolerance": {
+    "latency": 0.1,
+    "throughput": 0.1,
+    "accuracy_points": 2.0
+  },
+  "cells": [
+    {
+      "variant": "base",
+      "cell": "chat_short",
+      "concurrency": 8,
+      "ttft_p95_ms": 52.1,
+      "output_tok_per_s": 617.71
+    },
+    {
+      "variant": "base",
+      "cell": "long_context",
+      "concurrency": 8,
+      "ttft_p95_ms": 2575.35,
+      "output_tok_per_s": 418.03
+    },
+    {
+      "variant": "base",
+      "cell": "rag_shared_prefix_cache-off",
+      "concurrency": 8,
+      "ttft_p95_ms": 866.29,
+      "output_tok_per_s": 471.91
+    },
+    {
+      "variant": "base",
+      "cell": "rag_shared_prefix_cache-on",
+      "concurrency": 8,
+      "ttft_p95_ms": 39.46,
+      "output_tok_per_s": 618.43
+    },
+    {
+      "variant": "w4",
+      "cell": "chat_short",
+      "concurrency": 8,
+      "ttft_p95_ms": 52.23,
+      "output_tok_per_s": 888.17
+    },
+    {
+      "variant": "w4",
+      "cell": "long_context",
+      "concurrency": 8,
+      "ttft_p95_ms": 2131.51,
+      "output_tok_per_s": 583.74
+    },
+    {
+      "variant": "w4",
+      "cell": "rag_shared_prefix_cache-off",
+      "concurrency": 8,
+      "ttft_p95_ms": 780.96,
+      "output_tok_per_s": 639.01
+    },
+    {
+      "variant": "w4",
+      "cell": "rag_shared_prefix_cache-on",
+      "concurrency": 8,
+      "ttft_p95_ms": 39.53,
+      "output_tok_per_s": 885.9
+    },
+    {
+      "variant": "w8",
+      "cell": "chat_short",
+      "concurrency": 8,
+      "ttft_p95_ms": 46.59,
+      "output_tok_per_s": 716.84
+    },
+    {
+      "variant": "w8",
+      "cell": "long_context",
+      "concurrency": 8,
+      "ttft_p95_ms": 1622.32,
+      "output_tok_per_s": 558.27
+    },
+    {
+      "variant": "w8",
+      "cell": "rag_shared_prefix_cache-off",
+      "concurrency": 8,
+      "ttft_p95_ms": 579.02,
+      "output_tok_per_s": 603.19
+    },
+    {
+      "variant": "w8",
+      "cell": "rag_shared_prefix_cache-on",
+      "concurrency": 8,
+      "ttft_p95_ms": 37.01,
+      "output_tok_per_s": 719.22
+    }
+  ],
+  "accuracy": {
+    "base": 58.75,
+    "w4": 55.35,
+    "w8": 58.25
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "variant": "base",
+  "disk_gib": 2.88,
+  "weights_gib": 2.89,
+  "kv_cache_tokens": 309056,
+  "perplexity": 9.61
+}
