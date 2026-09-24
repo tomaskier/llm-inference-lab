@@ -1,0 +1,22 @@
+[project]
+name = "llm-inference-lab"
+version = "0.1.0"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]  # ruff format handles length; a few tables are kept wide on purpose
+
+[tool.mypy]
+python_version = "3.12"
+platform = "linux"  # the GPU scripts only run on Linux (Kaggle)
+ignore_missing_imports = true
+files = ["scripts", "analysis"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

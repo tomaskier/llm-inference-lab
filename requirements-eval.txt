@@ -1,0 +1,3 @@
+# Kaggle, separate venv (.venvs/eval). Talks to the running vLLM server over HTTP.
+lm-eval[api]==0.4.13
+pyyaml

@@ -1,0 +1,22 @@
+# lm-eval settings shared by every variant (FR-4.2).
+# limit is per task; MMLU applies it per subject (57 subjects).
+tokenizer: Qwen/Qwen2.5-1.5B-Instruct
+num_concurrent: 8
+seed: 0
+tasks:
+  - name: mmlu
+    metric: acc,none
+    num_fewshot: 5
+    limit: 20
+  - name: arc_challenge
+    metric: acc_norm,none
+    num_fewshot: 5
+    limit: 500
+  - name: hellaswag
+    metric: acc_norm,none
+    num_fewshot: 5
+    limit: 500
+  - name: gsm8k
+    metric: exact_match,strict-match
+    num_fewshot: 5
+    limit: 250

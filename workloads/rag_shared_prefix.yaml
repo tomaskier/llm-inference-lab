@@ -1,0 +1,11 @@
+description: One long shared context plus a short unique question. Shows prefix caching.
+data:
+  prefix_tokens: 2048
+  prefix_count: 1
+  prompt_tokens: 64
+  output_tokens: 128
+concurrency: [1, 2, 4, 8, 16, 32]
+seconds_per_point: 40
+prefix_caching: [false, true]
+slo:
+  ttft_p95_ms: 1500

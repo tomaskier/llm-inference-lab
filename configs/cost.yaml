@@ -1,0 +1,7 @@
+# Reference price for the same GPU in the cloud (Kaggle itself is free).
+# The price below is a rough estimate. Check the provider's pricing page, then
+# set checked_on; until then the report marks costs as unverified.
+gpu: NVIDIA T4 16GB
+provider: Google Cloud, on-demand, us-central1 (GPU + n1-standard-4 VM)
+price_per_hour_usd: 0.54
+checked_on: null

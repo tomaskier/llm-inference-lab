@@ -2,6 +2,7 @@
 
 schemas/<name>.schema.json validates configs/<name>.yaml, or every
 configs/<name>/*.yaml if <name> is a folder (e.g. quantization/).
+The workload schema is the exception: it validates workloads/*.yaml.
 """
 
 import json
@@ -14,9 +15,12 @@ from jsonschema import Draft202012Validator
 ROOT = Path(__file__).resolve().parent.parent
 SCHEMAS = ROOT / "schemas"
 CONFIGS = ROOT / "configs"
+ELSEWHERE = {"workload": ROOT / "workloads"}
 
 
 def configs_for(name: str) -> list[Path]:
+    if name in ELSEWHERE:
+        return sorted(ELSEWHERE[name].glob("*.yaml"))
     single = CONFIGS / f"{name}.yaml"
     if single.exists():
         return [single]

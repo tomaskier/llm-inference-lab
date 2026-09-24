@@ -1,0 +1,9 @@
+description: Short prompts and answers, many users at once. Shows continuous batching.
+data:
+  prompt_tokens: 128
+  output_tokens: 128
+concurrency: [1, 2, 4, 8, 16, 32, 64]
+seconds_per_point: 40
+prefix_caching: [true]
+slo:
+  ttft_p95_ms: 500

@@ -36,9 +36,7 @@ def main() -> int:
             args.api_key,
             {
                 "model": model,
-                "messages": [
-                    {"role": "user", "content": "What is the capital of France?"}
-                ],
+                "messages": [{"role": "user", "content": "What is the capital of France?"}],
                 "max_tokens": 20,
                 "temperature": 0,
             },

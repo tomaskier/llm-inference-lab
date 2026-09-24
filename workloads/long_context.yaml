@@ -1,0 +1,9 @@
+description: Long prompts, medium answers. Puts pressure on the KV cache.
+data:
+  prompt_tokens: 4096
+  output_tokens: 256
+concurrency: [1, 2, 4, 8, 16, 32]
+seconds_per_point: 60
+prefix_caching: [true]
+slo:
+  ttft_p95_ms: 3000

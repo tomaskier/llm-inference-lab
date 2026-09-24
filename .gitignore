@@ -18,3 +18,13 @@ __pycache__/
 
 # Personal notes
 notas
+# Kaggle venvs (quant, bench, eval)
+/.venvs
+
+# Local Prometheus target (tunnel URL)
+observability/targets/*.json
+
+# Server logs and scratch output
+*.log
+*.partial.json
+/build

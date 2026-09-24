@@ -1,1 +1,5 @@
+# Kaggle, system Python: the vLLM server and the scripts that talk to it.
+# Verified on a T4 (driver 580, CUDA 13.0, Python 3.12.13) on 2026-09-24.
 vllm==0.30.0
+pyyaml
+datasets

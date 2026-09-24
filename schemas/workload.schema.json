@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GuideLLM workload",
+  "type": "object",
+  "properties": {
+    "description": {"type": "string"},
+    "data": {
+      "description": "Passed to GuideLLM as synthetic_text data",
+      "type": "object",
+      "properties": {
+        "prompt_tokens": {"type": "integer", "minimum": 1},
+        "output_tokens": {"type": "integer", "minimum": 1},
+        "prefix_tokens": {"type": "integer", "minimum": 1},
+        "prefix_count": {"type": "integer", "minimum": 1}
+      },
+      "required": ["prompt_tokens", "output_tokens"],
+      "additionalProperties": false
+    },
+    "concurrency": {
+      "description": "Load points, from low load to saturation (FR-3.1)",
+      "type": "array",
+      "items": {"type": "integer", "minimum": 1},
+      "minItems": 4,
+      "uniqueItems": true
+    },
+    "seconds_per_point": {"type": "integer", "minimum": 10},
+    "prefix_caching": {
+      "type": "array",
+      "items": {"type": "boolean"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "slo": {
+      "type": "object",
+      "properties": {
+        "ttft_p95_ms": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "required": ["ttft_p95_ms"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["description", "data", "concurrency", "seconds_per_point", "prefix_caching", "slo"],
+  "additionalProperties": false
+}

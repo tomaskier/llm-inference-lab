@@ -1,0 +1,4 @@
+# Kaggle, separate venv (.venvs/quant). llmcompressor 0.14.0 cannot share an
+# environment with vllm 0.30.0 (conflicting humming-kernels pins).
+llmcompressor==0.14.0
+pyyaml
