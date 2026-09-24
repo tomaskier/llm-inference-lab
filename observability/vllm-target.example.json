@@ -1,0 +1,6 @@
+[
+  {
+    "targets": ["example-words-here.trycloudflare.com"],
+    "labels": {"__scheme__": "https", "instance": "kaggle-t4"}
+  }
+]

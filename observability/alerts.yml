@@ -1,0 +1,56 @@
+# Metric names checked against vLLM 0.30.0. Run scripts/check_metrics.py
+# against a live server after upgrading vLLM; names change between versions.
+# Windows are short (1-2 min) because Kaggle load tests are short.
+# See docs/runbook.md for what to do when each one fires.
+groups:
+  - name: vllm
+    rules:
+      - alert: HighTTFT
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[1m]))
+          ) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: p95 time to first token is above 500 ms
+          description: "p95 TTFT is {{ $value | humanizeDuration }}. Users are waiting for the first word."
+
+      - alert: KVCacheNearFull
+        expr: max(vllm:kv_cache_usage_perc) > 0.9
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: KV cache is over 90% full
+          description: "KV cache at {{ $value | humanizePercentage }}. New requests will queue or get preempted."
+
+      - alert: QueueBuilding
+        expr: sum(vllm:num_requests_waiting) > 10
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: More than 10 requests are waiting
+          description: "{{ $value }} requests waiting. The server is saturated."
+
+      - alert: ErrorRateHigh
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[2m]))
+            / clamp_min(sum(rate(http_requests_total[2m])), 1e-9) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: More than 1% of requests are failing
+          description: "Error rate is {{ $value | humanizePercentage }}."
+
+      - alert: ScrapeDown
+        expr: up{job="vllm"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: Prometheus can't reach vLLM
+          description: "The tunnel or the server is down (Kaggle sessions stop without warning)."
