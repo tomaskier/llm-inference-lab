@@ -2,25 +2,26 @@
 # One-time setup for each Kaggle session (pip installs don't survive a restart).
 # vLLM goes in the system Python; the other tools get their own venvs because
 # their pinned dependencies clash with vLLM's.
+#
+# Uses virtualenv + pip rather than uv: on some Kaggle images the uv binary
+# lands in /usr/local/bin without execute permission.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-echo "== uv"
-pip install -q uv
-UV="python -m uv"  # the uv binary sometimes lands without +x on Kaggle
+echo "== virtualenv"
+pip install -q virtualenv
 
 for env in quant bench eval; do
   echo "== venv $env"
   if [ ! -x ".venvs/$env/bin/python" ]; then
-    $UV venv -q ".venvs/$env" --python 3.12
+    python -m virtualenv -q ".venvs/$env"
   fi
   # wrapt: Kaggle's sitecustomize imports it in every interpreter.
-  $UV pip install -q --python ".venvs/$env/bin/python" -r "requirements-$env.txt" wrapt
+  ".venvs/$env/bin/python" -m pip install -q -r "requirements-$env.txt" wrapt
 done
 
 echo "== vllm (system python)"
-# Plain pip here: it's what worked in the first session, and pip tolerates the
-# conflicts with Kaggle's preinstalled packages that we don't use.
+# pip tolerates the conflicts with Kaggle's preinstalled packages that we don't use.
 pip install -q -r requirements-gpu.txt
 
 echo "== versions"
