@@ -1,0 +1,27 @@
+# vLLM on a GPU VM (not used on Kaggle, which has no Docker).
+# Kept as a template and checked in CI with `docker compose config`.
+#   cp docker/.env.example docker/.env && docker compose -f docker/compose.yml up
+services:
+  vllm:
+    image: vllm/vllm-openai:v0.30.0
+    command:
+      - ${MODEL_PATH}
+      - --dtype=float16
+      - --max-model-len=${MAX_MODEL_LEN}
+      - --gpu-memory-utilization=${GPU_MEMORY_UTILIZATION}
+      - --max-num-seqs=${MAX_NUM_SEQS}
+      - --seed=0
+      - ${PREFIX_CACHING}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../models:/models:ro
+      - ${HF_CACHE:-~/.cache/huggingface}:/root/.cache/huggingface
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

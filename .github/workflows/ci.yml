@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+
+      - name: Lint and format
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Type check
+        run: mypy
+      - name: Validate configs against schemas
+        run: python scripts/validate_configs.py
+
+      - name: Sample results are up to date
+        run: |
+          python -m analysis.make_sample
+          git diff --exit-code results/sample
+      - name: Tests
+        run: pytest -q
+      - name: Report builds from sample results
+        run: python -m analysis.report --results results/sample --out build/sample
+      - name: No regression against the baseline
+        run: python scripts/check_regression.py --results results/sample
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sample-report
+          path: build/sample
+
+  observability:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: promtool check config and rules
+        run: |
+          docker run --rm -v "$PWD/observability:/etc/prometheus" --entrypoint promtool \
+            prom/prometheus:v3.5.0 check config /etc/prometheus/prometheus.yml
+      - name: Dashboard is valid JSON
+        run: python -m json.tool observability/grafana/dashboards/vllm.json > /dev/null
+      - name: Compose files are valid
+        run: |
+          docker compose -f observability/compose.yml config -q
+          docker compose -f docker/compose.yml --env-file docker/.env.example config -q
