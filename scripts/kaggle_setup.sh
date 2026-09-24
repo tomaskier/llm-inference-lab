@@ -7,14 +7,15 @@ cd "$(dirname "$0")/.."
 
 echo "== uv"
 pip install -q uv
+UV="python -m uv"  # the uv binary sometimes lands without +x on Kaggle
 
 for env in quant bench eval; do
   echo "== venv $env"
   if [ ! -x ".venvs/$env/bin/python" ]; then
-    uv venv -q ".venvs/$env" --python 3.12
+    $UV venv -q ".venvs/$env" --python 3.12
   fi
   # wrapt: Kaggle's sitecustomize imports it in every interpreter.
-  uv pip install -q --python ".venvs/$env/bin/python" -r "requirements-$env.txt" wrapt
+  $UV pip install -q --python ".venvs/$env/bin/python" -r "requirements-$env.txt" wrapt
 done
 
 echo "== vllm (system python)"
