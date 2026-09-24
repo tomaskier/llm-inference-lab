@@ -1,0 +1,5 @@
+scheme: W8A8
+calibration_dataset: HuggingFaceH4/ultrachat_200k
+num_samples: 512
+max_seq_len: 2048
+seed: 0

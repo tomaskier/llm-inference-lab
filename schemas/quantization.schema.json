@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLM Compressor quantization config (one per variant)",
+  "type": "object",
+  "properties": {
+    "scheme": {
+      "description": "T4 has no FP8, so 8-bit is INT8 W8A8",
+      "enum": ["W8A8", "W4A16"]
+    },
+    "calibration_dataset": {
+      "type": "string",
+      "pattern": "^[\\w.-]+/[\\w.-]+$"
+    },
+    "num_samples": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "max_seq_len": {
+      "type": "integer",
+      "minimum": 128
+    },
+    "seed": {
+      "type": "integer"
+    }
+  },
+  "required": ["scheme", "calibration_dataset", "num_samples", "max_seq_len", "seed"],
+  "additionalProperties": false
+}
